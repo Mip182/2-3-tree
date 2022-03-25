@@ -5,7 +5,6 @@
 #include <iostream>
 #include <algorithm>
 
-using namespace std;
 
 template<class T>
 class Set {
@@ -15,7 +14,7 @@ public:
         const T *R;
         const T *VAL;
         vertex *p;
-        vector<vertex *> ch;
+        std::vector<vertex *> ch;
 
         vertex() : L(nullptr), R(nullptr), VAL(nullptr), p(nullptr), ch() {
 
@@ -52,7 +51,7 @@ public:
         root = new vertex;
         root->p = root;
 
-        function<void(vertex *, vertex *)> dfs_to_deep_copy = [&](vertex *him, vertex *me) {
+        std::function<void(vertex *, vertex *)> dfs_to_deep_copy = [&](vertex *him, vertex *me) {
             if (him == nullptr)
                 return;
 
@@ -96,7 +95,7 @@ public:
             return *this;
         }
 
-        function<void(vertex *)> dfs_to_delete = [&](vertex *s) {
+        std::function<void(vertex *)> dfs_to_delete = [&](vertex *s) {
             if (s == nullptr) {
                 return;
             }
@@ -138,7 +137,7 @@ public:
     }
 
     ~Set() {
-        function<void(vertex *)> dfs_to_delete = [&](vertex *s) {
+        std::function<void(vertex *)> dfs_to_delete = [&](vertex *s) {
             if (s == nullptr) {
                 return;
             }
@@ -168,7 +167,7 @@ public:
 
     vertex *new_term_vertex(const T &elem) {
         vertex *s = new vertex;
-        s->ch = vector<vertex *>();
+        s->ch = std::vector<vertex *>();
         s->VAL = new const T(elem);
         s->L = s->VAL;
         s->R = s->VAL;
@@ -177,7 +176,7 @@ public:
         return s;
     }
 
-    vertex *new_vertex_with_ch(const vector<vertex *> &ch) {
+    vertex *new_vertex_with_ch(const std::vector<vertex *> &ch) {
         vertex *s = new vertex;
         s->p = s;
         s->VAL = nullptr;
@@ -283,7 +282,7 @@ public:
                     return *a->L < *b->L;
                 });
 
-                function<void(vertex *)> solve_problems = [&](vertex *s) {
+                std::function<void(vertex *)> solve_problems = [&](vertex *s) {
                     rebuild_children(s, false);
 
                     if (s->ch.size() == 4) {
@@ -372,7 +371,7 @@ public:
                 delete now->ch[ind];
                 now->ch.erase(now->ch.begin() + ind);
 
-                function<void(vertex *)> solve_problems = [&](vertex *s) {
+                std::function<void(vertex *)> solve_problems = [&](vertex *s) {
                     rebuild_children(s, false);
 
                     if (s->ch.size() == 1) {
@@ -644,7 +643,7 @@ public:
                         return iterator(now->ch[i], en);
                     }
                 }
-                
+
                 return this->end();
             }
         }
@@ -663,7 +662,7 @@ public:
                 }
             } else {
                 vertex *now = root;
-                
+
                 while (!is_terminal(now->ch[0])) {
                     bool found = false;
 
@@ -676,7 +675,7 @@ public:
                             break;
                         }
                     }
-                    
+
                     if (!found) {
                         return this->end();
                     }
@@ -698,20 +697,20 @@ public:
         if (him == nullptr) {
             return;
         }
-        
+
         if (him->VAL != nullptr) {
             me->VAL = new const T(*him->VAL);
         } else {
             me->VAL = nullptr;
         }
-        
+
         for (auto c: him->ch) {
             vertex *CH = new vertex;
             CH->p = me;
             me->ch.push_back(CH);
             dfs_to_deep_copy(c, CH);
         }
-        
+
         if (me->ch.empty()) {
             me->L = me->VAL;
             me->R = me->VAL;
