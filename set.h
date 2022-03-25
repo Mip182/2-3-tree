@@ -47,23 +47,28 @@ public:
             sz = 0;
             return;
         }
+
         sz = other.sz;
         root = new vertex;
         root->p = root;
+
         function<void(vertex *, vertex *)> dfs_to_deep_copy = [&](vertex *him, vertex *me) {
             if (him == nullptr)
                 return;
+
             if (him->VAL != nullptr) {
                 me->VAL = new const T(*him->VAL);
             } else {
                 me->VAL = nullptr;
             }
+
             for (auto c: him->ch) {
                 vertex *CH = new vertex;
                 CH->p = me;
                 me->ch.push_back(CH);
                 dfs_to_deep_copy(c, CH);
             }
+
             if (me->ch.empty()) {
                 me->L = me->VAL;
                 me->R = me->VAL;
@@ -72,6 +77,7 @@ public:
                 me->R = me->ch.back()->R;
             }
         };
+
         dfs_to_deep_copy(other.root, root);
 
         beg = root;
@@ -89,17 +95,22 @@ public:
         if (this->root == other.root && this->beg == other.beg && this->en == other.en && this->sz == other.sz) {
             return *this;
         }
+
         function<void(vertex *)> dfs_to_delete = [&](vertex *s) {
             if (s == nullptr) {
                 return;
             }
+
             for (vertex *c: s->ch) {
                 dfs_to_delete(c);
             }
+
             delete s->VAL;
             delete s;
         };
+
         dfs_to_delete(root);
+
         if (other.root == nullptr) {
             root = nullptr;
             beg = nullptr;
@@ -107,14 +118,18 @@ public:
             sz = 0;
             return *this;
         }
+
         sz = other.sz;
         root = new vertex;
         root->p = root;
+
         dfs_to_deep_copy(other.root, root);
+
         beg = root;
         while (beg != nullptr && !beg->ch.empty()) {
             beg = beg->ch[0];
         }
+
         en = root;
         while (en != nullptr && !en->ch.empty()) {
             en = en->ch.back();
@@ -127,12 +142,15 @@ public:
             if (s == nullptr) {
                 return;
             }
+
             for (vertex *c: s->ch) {
                 dfs_to_delete(c);
             }
+
             delete s->VAL;
             delete s;
         };
+
         dfs_to_delete(root);
     }
 
@@ -179,13 +197,16 @@ public:
         if (s->ch.empty()) {
             return;
         }
+
         if (need_sort) {
             sort(s->ch.begin(), s->ch.end(), [&](vertex *a, vertex *b) {
                 return *a->L < *b->L;
             });
         }
+
         s->L = s->ch[0]->L;
         s->R = s->ch.back()->R;
+
         for (const auto &to: s->ch) {
             to->p = s;
         }
@@ -205,55 +226,72 @@ public:
                 if (is_equal(*root->VAL, elem)) {
                     return;
                 }
+
                 vertex *one_more = new_term_vertex(elem);
+
                 if (elem < *beg->VAL) {
                     beg = one_more;
                 }
+
                 if (*en->VAL < elem) {
                     en = one_more;
                 }
+
                 root = new_vertex_with_ch({root, one_more});
             } else {
                 vertex *now = root;
+
                 while (!is_terminal(now->ch[0])) {
                     bool found = false;
+
                     for (auto c: now->ch) {
                         if (is_equal(elem, *c->R)) {
                             return;
                         }
+
                         if (elem < *c->R) {
                             found = true;
                             now = c;
                             break;
                         }
                     }
+
                     if (!found) {
                         now = now->ch.back();
                     }
                 }
+
                 for (auto c: now->ch) {
                     if (is_equal(elem, *c->VAL)) {
                         return;
                     }
                 }
+
                 vertex *what = new_term_vertex(elem);
+
                 if (elem < *beg->VAL) {
                     beg = what;
                 }
+
                 if (*en->VAL < elem) {
                     en = what;
                 }
+
                 now->ch.push_back(what);
+
                 sort(now->ch.begin(), now->ch.end(), [&](vertex *a, vertex *b) {
                     return *a->L < *b->L;
                 });
+
                 function<void(vertex *)> solve_problems = [&](vertex *s) {
                     rebuild_children(s, false);
+
                     if (s->ch.size() == 4) {
                         vertex *brother = new_vertex_with_ch({s->ch[2], s->ch[3]});
                         s->ch.pop_back();
                         s->ch.pop_back();
                         rebuild_children(s, false);
+
                         if (s == s->p) {
                             vertex *new_root = new_vertex_with_ch({s, brother});
                             root = new_root;
@@ -264,11 +302,14 @@ public:
                             });
                         }
                     }
+
                     if (s->p == s) {
                         return;
                     }
+
                     solve_problems(s->p);
                 };
+
                 solve_problems(now);
             }
         }
@@ -290,6 +331,7 @@ public:
                 return;
             } else {
                 vertex *now = root;
+
                 while (!is_terminal(now->ch[0])) {
                     bool found = false;
                     for (auto c: now->ch) {
@@ -299,32 +341,40 @@ public:
                             break;
                         }
                     }
+
                     if (!found) {
                         return;
                     }
                 }
                 size_t ind = now->ch.size();
+
                 for (size_t i = 0; i < now->ch.size(); i++) {
                     if (is_equal(elem, *now->ch[i]->VAL)) {
                         ind = i;
                         break;
                     }
                 }
+
                 if (ind == now->ch.size()) {
                     return;
                 }
+
                 if (beg == now->ch[ind]) {
                     beg = (++iterator(beg, en)).now_;
                 }
+
                 if (en == now->ch[ind]) {
                     en = (--iterator(en, en)).now_;
                 }
+
                 sz--;
                 delete now->ch[ind]->VAL;
                 delete now->ch[ind];
                 now->ch.erase(now->ch.begin() + ind);
+
                 function<void(vertex *)> solve_problems = [&](vertex *s) {
                     rebuild_children(s, false);
+
                     if (s->ch.size() == 1) {
                         if (s->p == s) {
                             root = s->ch[0];
@@ -334,11 +384,13 @@ public:
                         } else {
                             vertex *P = s->p;
                             size_t what = 0;
+
                             for (size_t i = 0; i < P->ch.size(); i++) {
                                 if (P->ch[i] == s) {
                                     what = i;
                                 }
                             }
+
                             if (what + 1 < P->ch.size() && P->ch[what + 1]->ch.size() == 3) {
                                 vertex *brother = P->ch[what + 1];
                                 s->ch.push_back(brother->ch[0]);
@@ -373,8 +425,10 @@ public:
                     if (s->p == s) {
                         return;
                     }
+
                     solve_problems(s->p);
                 };
+
                 solve_problems(now);
             }
         }
@@ -418,22 +472,27 @@ public:
             while (now_ != nullptr && now_ != now_->p) {
                 size_t ind = 0;
                 vertex *P = now_->p;
+
                 for (size_t i = 0; i < P->ch.size(); i++) {
                     if (P->ch[i] == now_) {
                         ind = i;
                     }
                 }
+
                 if (ind + 1 == P->ch.size()) {
                     now_ = now_->p;
                 } else {
                     now_ = P->ch[ind + 1];
+
                     while (!now_->ch.empty()) {
                         now_ = now_->ch[0];
                     }
                     return *this;
                 }
             }
+
             now_ = nullptr;
+
             return *this;
         };
 
@@ -442,11 +501,13 @@ public:
             while (now_ != nullptr && now_ != now_->p) {
                 size_t ind = 0;
                 vertex *P = now_->p;
+
                 for (size_t i = 0; i < P->ch.size(); i++) {
                     if (P->ch[i] == now_) {
                         ind = i;
                     }
                 }
+
                 if (ind + 1 == P->ch.size()) {
                     now_ = now_->p;
                 } else {
@@ -457,7 +518,9 @@ public:
                     return iterator(was, en_);
                 }
             }
+
             now_ = nullptr;
+
             return iterator(was, en_);
         };
 
@@ -466,25 +529,31 @@ public:
                 now_ = en_;
                 return *this;
             }
+
             while (now_ != nullptr && now_ != now_->p) {
                 size_t ind = 0;
                 vertex *P = now_->p;
+
                 for (size_t i = 0; i < P->ch.size(); i++) {
                     if (P->ch[i] == now_) {
                         ind = i;
                     }
                 }
+
                 if (ind == 0) {
                     now_ = now_->p;
                 } else {
                     now_ = P->ch[ind - 1];
+
                     while (!now_->ch.empty()) {
                         now_ = now_->ch.back();
                     }
                     return *this;
                 }
             }
+
             now_ = nullptr;
+
             return *this;
         };
 
@@ -493,26 +562,33 @@ public:
                 now_ = en_;
                 return iterator(nullptr, en_);
             }
+
             vertex *was = now_;
+
             while (now_ != now_->p) {
                 size_t ind = 0;
                 vertex *P = now_->p;
+
                 for (size_t i = 0; i < P->ch.size(); i++) {
                     if (P->ch[i] == now_) {
                         ind = i;
                     }
                 }
+
                 if (ind == 0) {
                     now_ = now_->p;
                 } else {
                     now_ = P->ch[ind - 1];
+
                     while (!now_->ch.empty()) {
                         now_ = now_->ch.back();
                     }
                     return iterator(was, en_);
                 }
             }
+
             now_ = nullptr;
+
             return iterator(was, en_);
         };
 
@@ -547,6 +623,7 @@ public:
                 }
             } else {
                 vertex *now = root;
+
                 while (!is_terminal(now->ch[0])) {
                     bool found = false;
                     for (auto c: now->ch) {
@@ -556,15 +633,18 @@ public:
                             break;
                         }
                     }
+
                     if (!found) {
                         return this->end();
                     }
                 }
+
                 for (size_t i = 0; i < now->ch.size(); i++) {
                     if (is_equal(elem, *now->ch[i]->VAL)) {
                         return iterator(now->ch[i], en);
                     }
                 }
+                
                 return this->end();
             }
         }
@@ -583,6 +663,7 @@ public:
                 }
             } else {
                 vertex *now = root;
+                
                 while (!is_terminal(now->ch[0])) {
                     bool found = false;
 
@@ -595,6 +676,7 @@ public:
                             break;
                         }
                     }
+                    
                     if (!found) {
                         return this->end();
                     }
@@ -616,17 +698,20 @@ public:
         if (him == nullptr) {
             return;
         }
+        
         if (him->VAL != nullptr) {
             me->VAL = new const T(*him->VAL);
         } else {
             me->VAL = nullptr;
         }
+        
         for (auto c: him->ch) {
             vertex *CH = new vertex;
             CH->p = me;
             me->ch.push_back(CH);
             dfs_to_deep_copy(c, CH);
         }
+        
         if (me->ch.empty()) {
             me->L = me->VAL;
             me->R = me->VAL;
